@@ -1,1 +1,1 @@
-print("otap gay")
+print("Hello, World")
