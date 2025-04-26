@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сторінка входу - Красиві Стилі</title>
+    <style>
+        /* Початок CSS стилів */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap'); /* Використовуємо шрифт Poppins */
+
+        * { /* Базовий скидання стилів */
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif; /* Застосовуємо Poppins */
+            /* Більш м'який та сучасний градієнт */
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .form-container {
+            background-color: #ffffff; /* Чистий білий фон */
+            padding: 45px 35px; /* Трохи збільшені відступи */
+            border-radius: 16px; /* Більш заокруглені кути */
+            /* Багатошарова тінь для глибини */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05),
+                        0 10px 30px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 420px; /* Трохи ширший контейнер */
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .form-container:hover {
+             transform: translateY(-6px); /* Трохи більший підйом */
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08),
+                         0 15px 40px rgba(0, 0, 0, 0.15); /* Посилення тіні */
+        }
+
+        h2 {
+            margin-bottom: 30px; /* Збільшений відступ під заголовком */
+            color: #333;
+            font-weight: 600; /* Напівжирний шрифт */
+            font-size: 26px; /* Трохи більший розмір */
+        }
+
+        .input-group {
+            margin-bottom: 25px; /* Збільшений відступ */
+            text-align: left;
+            position: relative; /* Для позиціонування іконок */
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #444; /* Трохи темніший текст мітки */
+            font-weight: 500; /* Середня жирність */
+            font-size: 15px;
+        }
+
+        .input-group input {
+            width: 100%;
+            /* Збільшені відступи, особливо зліва для іконки */
+            padding: 14px 15px 14px 45px;
+            border: 1px solid #ddd; /* Тонша рамка */
+            border-radius: 8px; /* Більш заокруглені кути поля */
+            box-sizing: border-box;
+            font-size: 16px;
+            font-family: 'Poppins', sans-serif; /* Застосовуємо шрифт до поля */
+            color: #333;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* Додаємо іконки як фонові зображення SVG */
+        .input-group input[type="text"] {
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%23999" viewBox="0 0 16 16"><path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/></svg>');
+            background-repeat: no-repeat;
+            background-position: 15px center; /* Позиція іконки */
+            background-size: 16px 16px; /* Розмір іконки */
+        }
+
+        .input-group input[type="password"] {
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%23999" viewBox="0 0 16 16"><path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2zM5 8h6a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/></svg>');
+            background-repeat: no-repeat;
+            background-position: 15px center;
+            background-size: 16px 16px;
+        }
+
+
+        .input-group input::placeholder { /* Стилізація плейсхолдера */
+            color: #aaa;
+            font-weight: 400;
+        }
+
+        .input-group input:focus {
+            border-color: #a8edea; /* Колір рамки при фокусі */
+            /* Тінь при фокусі в колір градієнту */
+            box-shadow: 0 0 8px rgba(168, 237, 234, 0.5);
+            outline: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px; /* Збільшені відступи кнопки */
+            /* Новий градієнт для кнопки */
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px; /* Заокруглення кутів кнопки */
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: 600; /* Напівжирний шрифт кнопки */
+            margin-top: 20px; /* Відступ над кнопкою */
+            transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px 15px rgba(118, 75, 162, 0.3); /* Тінь для кнопки */
+        }
+
+        button:hover {
+            /* Зміна градієнту при наведенні */
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            transform: translateY(-3px); /* Більший підйом */
+            box-shadow: 0 6px 20px rgba(118, 75, 162, 0.4); /* Посилення тіні */
+        }
+
+        button:active {
+            transform: translateY(-1px); /* Легке натискання */
+            box-shadow: 0 2px 10px rgba(118, 75, 162, 0.3); /* Зменшення тіні */
+        }
+
+        .register-link {
+            margin-top: 25px; /* Збільшений відступ */
+            font-size: 15px; /* Трохи більший шрифт */
+            color: #555;
+        }
+
+        .register-link a {
+            color: #764ba2; /* Колір посилання в тон кнопці */
+            text-decoration: none;
+            font-weight: 600; /* Напівжирний шрифт посилання */
+            transition: color 0.3s ease, text-decoration 0.3s ease;
+        }
+
+        .register-link a:hover {
+            text-decoration: underline;
+            color: #667eea; /* Зміна кольору при наведенні */
+        }
+        /* Кінець CSS стилів */
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <form action="/process-login" method="post">
+            <h2>Вхід до системи</h2>
+            <div class="input-group">
+                <label for="username">Ім'я користувача або Email:</label>
+                <input type="text" id="username" name="username" required placeholder="Введіть ваш логін або email">
+            </div>
+            <div class="input-group">
+                <label for="password">Пароль:</label>
+                <input type="password" id="password" name="password" required placeholder="Введіть ваш пароль">
+            </div>
+            <button type="submit">Увійти</button>
+            <p class="register-link">
+                Немає акаунту? <a href="registration.html">Зареєструватися</a>
+            </p>
+        </form>
+    </div>
+</body>
+</html>

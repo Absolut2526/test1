@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сторінка Реєстрації - Показ Пароля</title>
+    <style>
+        /* Початок CSS стилів */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .form-container {
+            background-color: #ffffff;
+            padding: 45px 35px;
+            border-radius: 16px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05),
+                        0 10px 30px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .form-container:hover {
+             transform: translateY(-6px);
+             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08),
+                         0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        h2 {
+            margin-bottom: 30px;
+            color: #333;
+            font-weight: 600;
+            font-size: 26px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+            /* position: relative; -- Перенесено до input-wrapper */
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #444;
+            font-weight: 500;
+            font-size: 15px;
+        }
+
+        /* --- Новий контейнер для поля вводу та кнопки ока --- */
+        .input-wrapper {
+            position: relative; /* Встановлюємо контекст для позиціонування кнопки */
+            width: 100%;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 14px 15px; /* Стандартний padding */
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 16px;
+            font-family: 'Poppins', sans-serif;
+            color: #333;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* Іконка для імені користувача/email (без правого padding для кнопки) */
+        .input-group input[type="text"]:not(.password-input) { /* Виключаємо поле пароля, коли воно text */
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%23999" viewBox="0 0 16 16"><path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/></svg>');
+            background-repeat: no-repeat;
+            background-position: 15px center;
+            background-size: 16px 16px;
+            padding-left: 45px; /* Відступ для іконки */
+            padding-right: 15px; /* Стандартний правий відступ */
+        }
+
+        /* Іконка та відступи для полів пароля */
+        .input-group .input-wrapper input[type="password"],
+        .input-group .input-wrapper input[type="text"].password-input
+         {
+             background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%23999" viewBox="0 0 16 16"><path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2zM5 8h6a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/></svg>');
+            background-repeat: no-repeat;
+            background-position: 15px center;
+            background-size: 16px 16px;
+             /* Збільшено padding-right для кнопки ока */
+             padding-left: 45px; /* Відступ для іконки замка */
+            padding-right: 50px; /* Відступ для кнопки ока */
+        }
+
+        /* Стилізація кнопки показу пароля */
+        .toggle-password {
+            position: absolute;
+            right: 15px; /* Позиція справа */
+            /* --- Повертаємо центрування відносно батька (.input-wrapper) --- */
+            top: 50%;
+            transform: translateY(-50%);
+            /* --- Кінець змін --- */
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px; /* Збільшує область кліку */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            /* height: auto; -- Прибираємо фіксовану висоту */
+        }
+
+         /* Стиль іконки ока (SVG) */
+        .toggle-password svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .toggle-password:hover {
+            color: #555;
+        }
+
+
+        .input-group input::placeholder {
+             color: #aaa;
+             font-weight: 400;
+        }
+
+        .input-group input:focus {
+            border-color: #a8edea;
+            box-shadow: 0 0 8px rgba(168, 237, 234, 0.5);
+            outline: none;
+        }
+
+        /* Позиціонуємо повідомлення про помилку під обгорткою */
+        .error-message {
+            color: #e74c3c;
+            font-size: 13px;
+            font-weight: 500;
+            margin-top: 6px;
+            display: none;
+            text-align: left;
+            padding-left: 5px;
+        }
+
+        button[type="submit"] {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: 600;
+            margin-top: 15px;
+            transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px 15px rgba(118, 75, 162, 0.3);
+        }
+
+        button[type="submit"]:hover {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(118, 75, 162, 0.4);
+        }
+
+         button[type="submit"]:active {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 10px rgba(118, 75, 162, 0.3);
+        }
+
+        .login-link {
+            margin-top: 25px;
+            font-size: 15px;
+            color: #555;
+        }
+
+        .login-link a {
+            color: #764ba2;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease, text-decoration 0.3s ease;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+            color: #667eea;
+        }
+        /* Кінець CSS стилів */
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <form id="registration-form" action="/process-registration" method="post" novalidate>
+            <h2>Створення акаунту</h2>
+
+            <div class="input-group">
+                <label for="username">Ім'я користувача або Email:</label>
+                <input type="text" id="username" name="username" required placeholder="Введіть бажаний логін або email">
+                 <div class="error-message" id="username-error"></div>
+            </div>
+
+            <div class="input-group">
+                <label for="password">Пароль:</label>
+                <div class="input-wrapper">
+                    <input type="password" id="password" name="password" class="password-input" required placeholder="Створіть надійний пароль (мін. 6 симв.)">
+                    <button type="button" class="toggle-password" aria-label="Показати пароль">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/>
+                            <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8zm8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/>
+                        </svg>
+                    </button>
+                </div>
+                 <div class="error-message" id="password-error"></div>
+            </div>
+
+            <div class="input-group">
+                <label for="password_confirm">Підтвердіть пароль:</label>
+                 <div class="input-wrapper">
+                    <input type="password" id="password_confirm" name="password_confirm" class="password-input" required placeholder="Повторіть пароль">
+                    <button type="button" class="toggle-password" aria-label="Показати пароль">
+                         <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/>
+                            <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8zm8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="error-message" id="confirm-password-error">Паролі не співпадають.</div>
+            </div>
+
+            <button type="submit">Зареєструватися</button>
+
+            <p class="login-link">
+                Вже є акаунт? <a href="login.html">Увійти</a>
+            </p>
+        </form>
+    </div>
+
+    <script>
+        // --- Логіка валідації (без змін) ---
+        const form = document.getElementById('registration-form');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const passwordConfirmInput = document.getElementById('password_confirm');
+
+        const usernameError = document.getElementById('username-error');
+        const passwordError = document.getElementById('password-error');
+        const passwordConfirmError = document.getElementById('confirm-password-error');
+
+        function showError(inputElement, errorElement, message) {
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+            // Знаходимо сам input всередині wrapper, якщо він є
+            const inputField = inputElement.querySelector('input') || inputElement;
+            inputField.style.borderColor = '#e74c3c';
+        }
+
+        function hideError(inputElement, errorElement) {
+            errorElement.style.display = 'none';
+             // Знаходимо сам input всередині wrapper, якщо він є
+            const inputField = inputElement.querySelector('input') || inputElement;
+            inputField.style.borderColor = '#ddd';
+        }
+
+        // Трохи адаптуємо функції для роботи з wrapper або без нього
+        function getInputElement(id) {
+            const element = document.getElementById(id);
+            // Повертаємо wrapper, якщо він є батьком поля пароля, інакше сам елемент
+            if (element.type === 'password' || element.type === 'text' && element.classList.contains('password-input')) {
+                return element.parentElement; // Повертаємо .input-wrapper
+            }
+            return element; // Повертаємо сам input для username
+        }
+
+
+        form.addEventListener('submit', function(event) {
+            let isValid = true;
+            // Використовуємо getInputElement для отримання правильного елемента для стилізації рамки
+            hideError(getInputElement('username'), usernameError);
+            hideError(getInputElement('password'), passwordError);
+            hideError(getInputElement('password_confirm'), passwordConfirmError);
+
+             if (usernameInput.value.trim() === '') {
+                 showError(getInputElement('username'), usernameError, "Ім'я користувача не може бути пустим.");
+                 isValid = false;
+             }
+            if (passwordInput.value.length < 6) {
+                showError(getInputElement('password'), passwordError, 'Пароль має містити щонайменше 6 символів.');
+                isValid = false;
+             }
+            if (passwordInput.value !== passwordConfirmInput.value) {
+                 if (passwordInput.value.length > 0 || passwordConfirmInput.value.length > 0) {
+                    showError(getInputElement('password_confirm'), passwordConfirmError, 'Паролі не співпадають.');
+                    isValid = false;
+                 }
+            } else if (passwordConfirmInput.value.length === 0 && passwordInput.value.length >= 6) {
+                 showError(getInputElement('password_confirm'), passwordConfirmError, 'Будь ласка, підтвердіть пароль.');
+                 isValid = false;
+            }
+
+            if (!isValid) {
+                event.preventDefault();
+            }
+        });
+
+         usernameInput.addEventListener('input', () => hideError(getInputElement('username'), usernameError));
+         passwordInput.addEventListener('input', () => {
+             hideError(getInputElement('password'), passwordError);
+             if (passwordConfirmInput.value.length > 0 && passwordInput.value !== passwordConfirmInput.value) {
+                 showError(getInputElement('password_confirm'), passwordConfirmError, 'Паролі не співпадають.');
+             } else if (passwordConfirmInput.value.length > 0) {
+                 hideError(getInputElement('password_confirm'), passwordConfirmError);
+             }
+         });
+         passwordConfirmInput.addEventListener('input', () => {
+             if (passwordInput.value === passwordConfirmInput.value) {
+                 hideError(getInputElement('password_confirm'), passwordConfirmError);
+             } else {
+                 showError(getInputElement('password_confirm'), passwordConfirmError, 'Паролі не співпадають.');
+             }
+         });
+
+        // --- Логіка для кнопок показу пароля (без змін) ---
+        const togglePasswordButtons = document.querySelectorAll('.toggle-password');
+
+        togglePasswordButtons.forEach(button => {
+            // Тепер поле вводу - це безпосередній сусід кнопки всередині .input-wrapper
+            const passwordField = button.previousElementSibling;
+
+            const showPassword = () => {
+                passwordField.type = 'text';
+                passwordField.classList.add('password-input');
+                 button.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M13.359 11.238C15.06 9.72 16 8 16 8s-3-5.5-8-5.5a7.028 7.028 0 0 0-2.79.588l.77.771A5.94 5.94 0 0 1 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.134 13.134 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755-.165.165-.337.328-.517.486l.708.709z"/>
+                        <path d="M11.297 9.176a3.5 3.5 0 0 0-4.474-4.474l.823.823a2.5 2.5 0 0 1 2.829 2.829l.822.822zm-2.943 1.288.822.822.083.083c.174.171.354.325.538.463.413.35.84.646 1.274.876l.708.709A6.986 6.986 0 0 1 8 13.5C3 13.5 0 8 0 8s.939-1.721 2.641-3.238l.708.709zm-1.075-1.075a3.5 3.5 0 0 1-.748-.748l-.823-.823-.083-.082a4.494 4.494 0 0 0-.748-.748l-.823-.823-.083-.083A7.028 7.028 0 0 0 3.21 4.21l-.708-.709C.939 4.978 0 8 0 8s3 5.5 8 5.5c.56 0 1.11-.06 1.641-.176l-.708-.709a4.494 4.494 0 0 1-.748-.748z"/>
+                    </svg>
+                 `;
+            };
+
+            const hidePassword = () => {
+                passwordField.type = 'password';
+                 passwordField.classList.remove('password-input');
+                 button.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/>
+                        <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8zm8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/>
+                    </svg>
+                 `;
+            };
+
+            button.addEventListener('mousedown', showPassword);
+            button.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                showPassword();
+            });
+
+            button.addEventListener('mouseup', hidePassword);
+            button.addEventListener('touchend', hidePassword);
+            button.addEventListener('mouseleave', hidePassword);
+        });
+
+    </script>
+
+</body>
+</html>
