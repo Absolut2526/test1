@@ -7,8 +7,11 @@ import time # Для логування часу
 # --- Глобальні налаштування та шляхи ---
 
 # Шлях до файлу бази даних (у тій же папці, що і скрипт)
+# Використання __file__ робить шлях відносним до розташування скрипта
+# os.path.abspath потрібен для надійності, особливо якщо скрипт запускається з іншого місця
 db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'users.db'))
-# Ключ для зберігання імені користувача в сховищі клієнта
+
+# Ключ для зберігання імені користувача в сховищі клієнта (для сесії)
 SESSION_KEY = "logged_in_user"
 print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Шлях до БД: {db_path}")
 
@@ -18,6 +21,7 @@ def setup_database():
     """
     Створює файл БД та таблицю 'users', якщо вони ще не існують.
     Ця функція викликається один раз при старті програми.
+    Використовує 'try...finally' для гарантованого закриття з'єднання.
     """
     conn = None # Ініціалізуємо змінну з'єднання
     try:
@@ -26,6 +30,7 @@ def setup_database():
         cursor = conn.cursor()
         # Виконуємо запит SQL для створення таблиці
         # IF NOT EXISTS запобігає помилці, якщо таблиця вже створена
+        # PRIMARY KEY на username забезпечує унікальність імен користувачів
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS users (
                 username TEXT PRIMARY KEY,
@@ -36,9 +41,8 @@ def setup_database():
         conn.commit()
         print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Перевірка/створення таблиці 'users' виконано.")
     except sqlite3.Error as e:
-        # Обробляємо можливі помилки SQLite
+        # Обробляємо можливі помилки SQLite під час налаштування
         print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Помилка під час початкового налаштування БД: {e}")
-        # В реальному додатку тут може бути більш складна логіка обробки помилок
     finally:
         # Гарантовано закриваємо з'єднання, якщо воно було відкрито
         if conn:
@@ -64,17 +68,15 @@ def main(page: ft.Page):
     Основна функція, яка визначає інтерфейс користувача та логіку програми.
     """
     # --- Налаштування сторінки ---
-    page.title = "Форма Реєстрації та Входу"
-    page.window_width = 400
-    page.window_height = 600
-    # Початкове вирівнювання буде встановлено залежно від наявності сесії
+    page.title = "Програма з Логіном"
+    page.window_width = 500
+    page.window_height = 700
+    # Вирівнювання буде встановлюватися динамічно залежно від стану (логін/вхід)
 
     # --- Виклик функції налаштування БД при старті ---
     setup_database()
 
-    # --- Визначення елементів керування (поля вводу, кнопки, текст) ---
-
-    # Поля для реєстрації
+    # --- Визначення елементів керування для форм входу/реєстрації ---
     reg_username_field = ft.TextField(
         label="Ім'я користувача (реєстрація)",
         width=300,
@@ -82,8 +84,8 @@ def main(page: ft.Page):
     )
     reg_password_field = ft.TextField(
         label="Пароль (реєстрація)",
-        password=True,         # Приховує введений текст
-        can_reveal_password=True, # Додає іконку для показу/приховування пароля
+        password=True,
+        can_reveal_password=True,
         width=300,
         tooltip="Введіть надійний пароль"
     )
@@ -94,13 +96,11 @@ def main(page: ft.Page):
         width=300,
         tooltip="Введіть пароль ще раз для перевірки"
     )
-
-    # Поля для входу
     login_username_field = ft.TextField(
         label="Ім'я користувача (вхід)",
         width=300,
         tooltip="Введіть ваше ім'я користувача"
-        )
+    )
     login_password_field = ft.TextField(
         label="Пароль (вхід)",
         password=True,
@@ -108,139 +108,177 @@ def main(page: ft.Page):
         width=300,
         tooltip="Введіть ваш пароль"
     )
-
-    # Текстове поле для виведення повідомлень (помилок або успіху)
+    # Текстове поле для виведення повідомлень про помилки
     feedback_text = ft.Text(
-        value="",               # Початково порожнє
-        color=ft.colors.RED,  # Початковий колір для помилок
-        text_align=ft.TextAlign.CENTER, # Вирівнювання тексту по центру
-        width=300               # Обмежуємо ширину для кращого переносу
+        value="",
+        color=ft.colors.RED,
+        text_align=ft.TextAlign.CENTER,
+        width=300
     )
 
     # --- Функції для перемикання між видами (сценами) ---
 
     def show_logged_in_view(username):
         """
-        Очищає сторінку та відображає простий інтерфейс для залогіненого користувача.
+        Очищає сторінку та відображає основний інтерфейс програми для залогіненого користувача.
+        Встановлює AppBar та основний контент.
         """
-        page.clean() # Видаляє всі існуючі елементи зі сторінки
-        # Налаштовуємо вирівнювання для цієї сцени
-        page.vertical_alignment = ft.MainAxisAlignment.START
-        page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
+        page.clean() # Очищаємо попередній вміст
+        page.vertical_alignment = ft.MainAxisAlignment.START # Вирівнюємо вміст зверху
+        page.horizontal_alignment = ft.CrossAxisAlignment.STRETCH # Розтягуємо по ширині
 
-        # Додаємо новий вміст на сторінку
-        page.add(
-             # Контейнер для кращого контролю над відступами та вирівнюванням
-             ft.Container(
-                 content=ft.Column( # Вертикальне розташування елементів
-                     [
-                         # Текст привітання
-                         ft.Text(
-                             f"Вітаємо, {username}!",
-                             size=18, # Розмір шрифту
-                             text_align=ft.TextAlign.CENTER
-                         ),
-                         # Вертикальний відступ
-                         ft.Container(height=20),
-                         # Кнопка виходу
-                         ft.ElevatedButton(
-                             "Вийти",
-                             on_click=logout_click, # Обробник натискання
-                             width=150
-                         )
-                     ],
-                     # Вирівнювання елементів всередині колонки
-                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                     width=300 # Обмежуємо ширину колонки
-                 ),
-                 # Відступи навколо вмісту контейнера
-                 padding=ft.padding.symmetric(vertical=50, horizontal=20),
-                 # Вирівнювання самого контейнера по центру сторінки
-                 alignment=ft.alignment.center
-             )
+        # Створюємо кнопку "Вийти" (іконка) для AppBar
+        logout_button_appbar = ft.IconButton(
+            icon=ft.icons.LOGOUT,
+            tooltip="Вийти з облікового запису",
+            on_click=logout_click # Обробник натискання
         )
+
+        # Створюємо та встановлюємо AppBar для сторінки
+        page.appbar = ft.AppBar(
+            title=ft.Text("Головна сторінка"), # Заголовок панелі
+            bgcolor=ft.colors.SURFACE_VARIANT, # Колір фону панелі
+            actions=[logout_button_appbar] # Додаємо кнопку виходу до дій у AppBar
+        )
+
+        # Створюємо основний вміст сторінки (панель інструментів)
+        main_content = ft.Column(
+            controls=[
+                ft.Container(height=10), # Невеликий відступ зверху
+                ft.Text(f"Вітаємо, {username}!", size=22, weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER),
+                ft.Divider(height=20), # Розділювач з відступами
+                ft.Text("Ваша панель інструментів:", size=16),
+                ft.Container(height=15),
+
+                # Приклади секцій або функцій у вигляді карток (placeholders)
+                ft.Card(
+                    content=ft.Container(
+                        padding=15,
+                        content=ft.Row( # Використовуємо Row для іконки та тексту поруч
+                            controls=[
+                                ft.Icon(ft.icons.INSIGHTS, color=ft.colors.BLUE_700), # Іконка
+                                ft.Text(" Аналітика (приклад)") # Текст
+                            ],
+                            vertical_alignment=ft.CrossAxisAlignment.CENTER # Вирівнюємо по вертикалі
+                        )
+                    )
+                ),
+                ft.Card(
+                     content=ft.Container(
+                        padding=15,
+                        content=ft.Row(
+                            controls=[
+                                ft.Icon(ft.icons.SETTINGS, color=ft.colors.ORANGE_800),
+                                ft.Text(" Налаштування (приклад)")
+                            ],
+                            vertical_alignment=ft.CrossAxisAlignment.CENTER
+                        )
+                    )
+                ),
+                 ft.Card(
+                     content=ft.Container(
+                        padding=15,
+                        content=ft.Row(
+                            controls=[
+                                ft.Icon(ft.icons.PERSON, color=ft.colors.GREEN_700),
+                                ft.Text(" Мій профіль (приклад)")
+                            ],
+                            vertical_alignment=ft.CrossAxisAlignment.CENTER
+                        )
+                    )
+                ),
+
+                ft.Container(height=20), # Відступ
+                ft.Text("Тут може бути інша корисна інформація або дії...", italic=True) # Додатковий текст
+
+            ],
+            # Дозволяємо колонці зайняти весь доступний вертикальний простір
+            expand=True
+        )
+
+        # Додаємо основний вміст на сторінку (з бічними відступами)
+        page.add(ft.Container(content=main_content, padding=ft.padding.symmetric(horizontal=20)))
         page.update() # Оновлюємо сторінку для відображення змін
 
     def show_login_register_view():
         """
-        Очищає сторінку та відображає початковий інтерфейс з вкладками входу/реєстрації.
+        Очищає сторінку, прибирає AppBar (якщо він є) та показує екран входу/реєстрації.
         """
-        page.clean()
-        # Повертаємо початкові налаштування вирівнювання
+        page.clean() # Очищаємо сторінку
+        page.appbar = None # !!! Дуже важливо: прибираємо AppBar !!!
+        # Повертаємо початкові налаштування вирівнювання для форми входу
         page.vertical_alignment = ft.MainAxisAlignment.CENTER
         page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
-        feedback_text.value = "" # Очищаємо повідомлення про помилки
-        # Додаємо заздалегідь створений елемент з вкладками
-        # Переконуємось, що login_register_column визначено перед цим викликом
+        feedback_text.value = "" # Очищаємо текст помилок
+        # Переконуємось, що об'єкт з вкладками існує перед додаванням
+        # (Має існувати, оскільки визначається нижче, але це додаткова пересторога)
         if 'login_register_column' in locals() or 'login_register_column' in globals():
-             page.add(login_register_column)
+             page.add(login_register_column) # Додаємо колонку з вкладками
         else:
-             # Це не повинно трапитись у нормальному потоці, але додамо перевірку
+             # Цей блок коду не повинен виконуватися в нормальному режимі
              print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Помилка: login_register_column не знайдено при виклику show_login_register_view")
-             # Можна додати базовий текст помилки на сторінку
              page.add(ft.Text("Помилка завантаження інтерфейсу входу."))
-        page.update()
+        page.update() # Оновлюємо сторінку
 
     # --- Обробники подій ---
 
     def logout_click(e):
-        """Обробник натискання кнопки 'Вийти'."""
-        print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Користувач виходить. Видалення сесії.")
-        # Видаляємо ключ сесії зі сховища
+        """Обробник натискання кнопки 'Вийти' (з AppBar)."""
+        current_user = page.client_storage.get(SESSION_KEY) # Отримуємо ім'я для логування
+        print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Користувач '{current_user}' виходить. Видалення сесії.")
+        # Видаляємо ключ сесії зі сховища клієнта
         page.client_storage.remove(SESSION_KEY)
         # Показуємо екран входу/реєстрації
         show_login_register_view()
 
     def register_click(e):
         """Обробник натискання кнопки 'Зареєструватися'."""
-        # Отримуємо значення з полів, видаляючи зайві пробіли з імені користувача
         username = reg_username_field.value.strip()
         password = reg_password_field.value
         confirm_password = reg_confirm_password_field.value
 
-        # Очищаємо попереднє повідомлення та встановлюємо колір для помилок
         feedback_text.value = ""
         feedback_text.color = ft.colors.RED
 
         # 1. Валідація введених даних
         if not username or not password or not confirm_password:
             feedback_text.value = "Будь ласка, заповніть всі поля реєстрації."
-            page.update() # Оновлюємо тільки текст повідомлення
-            return # Зупиняємо виконання функції
+            page.update(); return # Оновлюємо тільки текст і виходимо
 
         if password != confirm_password:
             feedback_text.value = "Паролі не співпадають."
-            # Очищаємо поля паролів для зручності
+            # Очищаємо поля паролів для зручності користувача
             reg_password_field.value = ""
             reg_confirm_password_field.value = ""
             reg_password_field.focus() # Ставимо фокус на перше поле пароля
-            page.update()
-            return
+            page.update(); return
 
-        # 2. Взаємодія з базою даних
+        # 2. Взаємодія з базою даних (у блоці try...except...finally)
         conn_reg = None # Ініціалізуємо змінну для з'єднання
         try:
             # Створюємо НОВЕ з'єднання з БД СПЕЦІАЛЬНО для цього запиту
+            # Це необхідно через те, що обробники Flet можуть виконуватися в окремих потоках
             conn_reg = sqlite3.connect(db_path)
             cursor_reg = conn_reg.cursor()
 
             # Перевіряємо, чи існує користувач з таким ім'ям
             cursor_reg.execute("SELECT username FROM users WHERE username=?", (username,))
-            if cursor_reg.fetchone(): # Якщо знайдено запис
+            if cursor_reg.fetchone(): # Якщо fetchone() повернув запис, користувач існує
                 feedback_text.value = f"Користувач '{username}' вже існує."
             else:
-                # Користувач не існує - реєструємо
+                # Користувач не існує - проводимо реєстрацію
                 hashed_pw = hash_password(password) # Хешуємо пароль
-                # Вставляємо нового користувача в таблицю
+                # Вставляємо нового користувача в таблицю 'users'
                 cursor_reg.execute("INSERT INTO users (username, password_hash) VALUES (?, ?)", (username, hashed_pw))
                 conn_reg.commit() # Зберігаємо зміни в БД
 
-                # Реєстрація успішна! Зберігаємо сесію та показуємо екран привітання
+                # Реєстрація успішна!
                 print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Користувач '{username}' зареєстрований. Збереження сесії.")
-                # !!! Зберігаємо ім'я користувача в сховищі клієнта !!!
+                # Зберігаємо ім'я користувача в сховищі клієнта для сесії
                 page.client_storage.set(SESSION_KEY, username)
+                # Показуємо основний інтерфейс програми
                 show_logged_in_view(username)
-                return # Важливо вийти тут, щоб не оновлювати feedback_text нижче
+                return # Важливо вийти тут, щоб не виконувати page.update() нижче
 
         except sqlite3.Error as db_err:
             # Обробка помилок SQLite під час реєстрації
@@ -255,7 +293,7 @@ def main(page: ft.Page):
             if conn_reg:
                 conn_reg.close()
 
-        # Оновлюємо feedback_text тільки якщо сталася помилка (не було return раніше)
+        # Оновлюємо feedback_text тільки якщо сталася помилка (тобто не було успішного return)
         page.update()
 
 
@@ -270,8 +308,7 @@ def main(page: ft.Page):
         # 1. Валідація введених даних
         if not username or not password:
             feedback_text.value = "Будь ласка, заповніть всі поля для входу."
-            page.update()
-            return
+            page.update(); return
 
         # 2. Взаємодія з базою даних
         conn_log = None
@@ -285,17 +322,18 @@ def main(page: ft.Page):
             result = cursor_log.fetchone() # Отримуємо один рядок результату або None
 
             if result: # Якщо користувач знайдений
-                stored_hash = result[0] # Перший стовпець результату - це хеш
+                stored_hash = result[0] # Перший стовпець результату - це збережений хеш
                 entered_hash = hash_password(password) # Хешуємо введений пароль
 
                 # Порівнюємо збережений хеш з хешем введеного пароля
                 if stored_hash == entered_hash:
-                    # Паролі співпали - вхід успішний! Зберігаємо сесію
+                    # Паролі співпали - вхід успішний!
                     print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Користувач '{username}' увійшов. Збереження сесії.")
-                     # !!! Зберігаємо ім'я користувача в сховищі клієнта !!!
+                     # Зберігаємо ім'я користувача в сховищі клієнта для сесії
                     page.client_storage.set(SESSION_KEY, username)
+                    # Показуємо основний інтерфейс програми
                     show_logged_in_view(username)
-                    return # Виходимо, щоб не оновлювати feedback_text
+                    return # Виходимо, щоб не виконувати page.update() нижче
                 else:
                     # Паролі не співпали
                     feedback_text.value = "Неправильний пароль."
@@ -316,27 +354,26 @@ def main(page: ft.Page):
         # Оновлюємо feedback_text тільки якщо сталася помилка
         page.update()
 
-    # --- Створення кнопок ---
+    # --- Створення UI для екрану входу/реєстрації (виконується завжди при старті) ---
+    # Кнопки
     register_button = ft.ElevatedButton(
         "Зареєструватися",
-        on_click=register_click, # Прив'язка обробника
+        on_click=register_click,
         width=300,
         tooltip="Створити новий обліковий запис"
         )
     login_button = ft.ElevatedButton(
         "Увійти",
-        on_click=login_click, # Прив'язка обробника
+        on_click=login_click,
         width=300,
         tooltip="Увійти з існуючим обліковим записом"
         )
-
-    # --- Створення UI для екрану входу/реєстрації (Вкладки) ---
-    # Визначаємо вміст кожної вкладки окремо
+    # Вміст вкладок
     login_tab_content = ft.Column(
             [login_username_field, login_password_field, login_button],
             alignment=ft.MainAxisAlignment.CENTER,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-            spacing=20 # Відстань між елементами в колонці
+            spacing=20
         )
     register_tab_content = ft.Column(
             [reg_username_field, reg_password_field, reg_confirm_password_field, register_button],
@@ -344,58 +381,43 @@ def main(page: ft.Page):
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             spacing=20
         )
-    # Створюємо сам об'єкт Tabs
+    # Сам об'єкт Tabs
     tabs = ft.Tabs(
-        selected_index=0, # Початково активна перша вкладка (Реєстрація)
-        animation_duration=300, # Тривалість анімації перемикання
+        selected_index=0, # Початково вибрана вкладка "Реєстрація"
+        animation_duration=300,
         tabs=[
-            ft.Tab(
-                text="Реєстрація", # Назва вкладки
-                content=register_tab_content # Вміст вкладки
-            ),
-            ft.Tab(
-                text="Вхід",
-                content=login_tab_content
-            ),
+            ft.Tab(text="Реєстрація", content=register_tab_content),
+            ft.Tab(text="Вхід", content=login_tab_content),
         ],
-        expand=1, # Дозволяє вкладкам зайняти доступний простір
+        expand=1, # Розтягувати вкладки
     )
-
-    # --- Створення основного контейнера для екрану Входу/Реєстрації ---
-    # Зберігаємо цей UI в змінній, щоб легко показувати його знову після виходу
+    # Основна колонка для екрану входу/реєстрації
     login_register_column = ft.Column(
             [
-                tabs, # Додаємо вкладки
-                # Контейнер для тексту зворотного зв'язку з відступом зверху
-                ft.Container(content=feedback_text, padding=ft.padding.only(top=20))
+                tabs, # Вкладки зверху
+                ft.Container(content=feedback_text, padding=ft.padding.only(top=20)) # Поле для помилок знизу
             ],
-            # Вирівнювання цього основного стовпця
-            alignment=ft.MainAxisAlignment.START, # Вкладки зверху
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-            expand=True # Дозволяє колонці розширюватися
+            alignment=ft.MainAxisAlignment.START, # Вміст колонки починається зверху
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER, # Центрування по горизонталі
+            expand=True # Розтягувати колонку
     )
 
-    # --- Початкове відображення інтерфейсу ---
-    # Перевіряємо наявність збереженої сесії при старті програми
+    # --- Початкове відображення інтерфейсу при запуску ---
+    # Перевіряємо, чи є збережена сесія в сховищі клієнта
     logged_in_user = page.client_storage.get(SESSION_KEY)
     if logged_in_user:
-        # Якщо є збережене ім'я користувача, показуємо екран привітання
-        print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Знайдено збережену сесію для: {logged_in_user}. Показ екрану привітання.")
-        # Встановлюємо відповідне вирівнювання для екрану привітання
-        page.vertical_alignment = ft.MainAxisAlignment.START
-        page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
+        # Якщо так, показуємо основний інтерфейс програми
+        print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Знайдено збережену сесію для: {logged_in_user}. Показ основного інтерфейсу.")
         show_logged_in_view(logged_in_user)
     else:
-        # Якщо немає, показуємо екран входу/реєстрації
+        # Якщо ні, показуємо екран входу/реєстрації
         print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Збережена сесія не знайдена. Показ екрану входу/реєстрації.")
-        # Встановлюємо вирівнювання для екрану входу
-        page.vertical_alignment = ft.MainAxisAlignment.CENTER
-        page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
         show_login_register_view()
 
 # --- Точка входу для запуску програми ---
+# Цей блок виконується тільки якщо скрипт запускається напряму (не імпортується)
 if __name__ == "__main__":
     # Запускаємо Flet додаток, вказуючи головну функцію 'main'
-    # Можна додати view=ft.AppView.FLET_APP для стандартного вікна
     ft.app(target=main)
+    # Цей рядок виконається після закриття вікна програми
     print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Роботу програми завершено.")
